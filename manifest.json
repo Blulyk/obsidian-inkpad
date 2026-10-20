@@ -1,7 +1,7 @@
 {
   "id": "inkpad",
   "name": "Inkpad",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "1.5.0",
   "description": "A low-latency, infinite Apple Pencil canvas stored as sync-friendly files.",
   "author": "Blulyk",
