@@ -5,6 +5,7 @@ import { EMPTY_DOCUMENT, InkDocument, InkPoint, InkShape, InkStroke, Tool } from
 import { InkElement } from "./types";
 import { VaultEmbedPickerModal } from "./vault-embed-picker";
 import { renderPdfPages } from "./pdf-renderer";
+import { t } from "./i18n";
 
 export const INKPAD_VIEW = "inkpad-canvas";
 
@@ -77,7 +78,7 @@ export class InkpadView extends ItemView {
 		this.buildToolbar();
 		this.viewportEl = this.containerEl.createDiv({ cls: "inkpad-viewport" });
 		this.elementLayer = this.viewportEl.createDiv({ cls: "inkpad-elements", attr: { "aria-hidden": "true" } });
-		this.canvas = this.viewportEl.createEl("canvas", { cls: "inkpad-canvas", attr: { "aria-label": "Lienzo de dibujo Inkpad", tabindex: "0" } });
+		this.canvas = this.viewportEl.createEl("canvas", { cls: "inkpad-canvas", attr: { "aria-label": t("canvas"), tabindex: "0" } });
 		const context = this.canvas.getContext("2d", { alpha: true, desynchronized: true });
 		if (!context) throw new Error("Canvas 2D no disponible");
 		this.context = context;
@@ -129,7 +130,7 @@ export class InkpadView extends ItemView {
 		const raw = await this.app.vault.read(this.file);
 		if (raw === this.lastWritten) return;
 		if (!isInkpadDocument(raw)) {
-			new Notice("Inkpad no cargó este archivo porque está incompleto o no es válido. No se ha sobrescrito.");
+			new Notice(t("invalidFile"));
 			return;
 		}
 		this.document = parseInkDocument(raw);
@@ -145,32 +146,32 @@ export class InkpadView extends ItemView {
 		const toolbar = this.containerEl.createDiv({ cls: "inkpad-toolbar" });
 		this.toolbarEl = toolbar;
 		const toolGroup = toolbar.createDiv({ cls: "inkpad-toolbar-group inkpad-tool-group" });
-		for (const [tool, label, icon] of [["pen", "Pluma", "pen-tool"], ["pencil", "Lápiz", "pencil-ruler"], ["marker", "Rotulador", "paintbrush"], ["highlighter", "Subrayador", "highlighter"], ["eraser", "Borrador", "eraser"], ["lasso", "Lazo", "lasso-select"]] as const) {
+		for (const [tool, label, icon] of [["pen", t("pen"), "pen-tool"], ["pencil", t("pencil"), "pencil-ruler"], ["marker", t("marker"), "paintbrush"], ["highlighter", t("highlighter"), "highlighter"], ["eraser", t("eraser"), "eraser"], ["lasso", t("lasso"), "lasso-select"]] as const) {
 			const button = this.iconButton(toolGroup, icon, label, "inkpad-tool", { "data-tool": tool });
 			button.addEventListener("click", () => { this.tool = tool; this.refreshToolbar(); });
 		}
 		const actionGroup = toolbar.createDiv({ cls: "inkpad-toolbar-group inkpad-action-group" });
-		const undo = this.iconButton(actionGroup, "undo-2", "Deshacer");
+		const undo = this.iconButton(actionGroup, "undo-2", t("undo"));
 		undo.addEventListener("click", () => this.undo());
-		const redo = this.iconButton(actionGroup, "redo-2", "Rehacer");
+		const redo = this.iconButton(actionGroup, "redo-2", t("redo"));
 		redo.addEventListener("click", () => this.redo());
-		const save = this.iconButton(actionGroup, "save", "Guardar ahora");
+		const save = this.iconButton(actionGroup, "save", t("saveNow"));
 		save.addEventListener("click", () => void this.saveNow());
-		const tools = this.iconButton(actionGroup, "ellipsis", "Más herramientas");
+		const tools = this.iconButton(actionGroup, "ellipsis", t("moreTools"));
 		tools.addEventListener("click", () => this.openQuickMenu());
-		const insert = this.iconButton(actionGroup, "plus", "Insertar archivo del vault");
+		const insert = this.iconButton(actionGroup, "plus", t("insertVaultFile"));
 		insert.addEventListener("click", () => new VaultEmbedPickerModal(this.app, file => this.insertFile(file)).open());
-		const text = this.iconButton(actionGroup, "type", "Insertar texto");
+		const text = this.iconButton(actionGroup, "type", t("insertText"));
 		text.addEventListener("click", () => this.insertText());
-		const deleteSelection = this.iconButton(actionGroup, "trash-2", "Eliminar selección", "inkpad-destructive");
+		const deleteSelection = this.iconButton(actionGroup, "trash-2", t("deleteSelection"), "inkpad-destructive");
 		deleteSelection.addEventListener("click", () => this.deleteSelection());
-		const exportButton = this.iconButton(actionGroup, "file-code-2", "Exportar tinta como SVG");
+		const exportButton = this.iconButton(actionGroup, "file-code-2", t("exportSvg"));
 		exportButton.addEventListener("click", () => void this.exportSvg());
-		const exportPngButton = this.iconButton(actionGroup, "image-down", "Exportar tinta como PNG");
+		const exportPngButton = this.iconButton(actionGroup, "image-down", t("exportPng"));
 		exportPngButton.addEventListener("click", () => void this.exportPng());
-		const frame = this.iconButton(actionGroup, "scan", "Encuadrar todo el contenido");
+		const frame = this.iconButton(actionGroup, "scan", t("frameContent"));
 		frame.addEventListener("click", () => this.frameContent());
-		const focus = this.iconButton(actionGroup, "panel-top-close", "Alternar modo enfoque");
+		const focus = this.iconButton(actionGroup, "panel-top-close", t("toggleFocus"));
 		focus.addEventListener("click", () => this.toggleFocusMode());
 		this.refreshToolbar();
 	}
@@ -179,12 +180,12 @@ export class InkpadView extends ItemView {
 		const dock = this.viewportEl.createDiv({ cls: "inkpad-bottom-dock" });
 		const leftRail = this.viewportEl.createDiv({ cls: "inkpad-left-rail" });
 		const bookmarkControls = this.viewportEl.createDiv({ cls: "inkpad-bookmark-controls" });
-		const bookmarks = bookmarkControls.createEl("button", { cls: "inkpad-bottom-button", attr: { "aria-label": "Posiciones guardadas" } }); setIcon(bookmarks, "bookmark"); bookmarks.addEventListener("click", () => this.toggleBookmarkMenu(bookmarkControls));
+		const bookmarks = bookmarkControls.createEl("button", { cls: "inkpad-bottom-button", attr: { "aria-label": t("savedPositions") } }); setIcon(bookmarks, "bookmark"); bookmarks.addEventListener("click", () => this.toggleBookmarkMenu(bookmarkControls));
 		const hud = dock.createDiv({ cls: "inkpad-viewport-hud" });
-		this.saveReadout = hud.createSpan({ cls: "inkpad-save-state", text: "Guardado" });
-		this.zoomReadout = hud.createEl("button", { cls: "inkpad-zoom-readout", text: "100%", attr: { "aria-label": "Restablecer zoom al 100%" } });
+		this.saveReadout = hud.createSpan({ cls: "inkpad-save-state", text: t("saved") });
+		this.zoomReadout = hud.createEl("button", { cls: "inkpad-zoom-readout", text: "100%", attr: { "aria-label": t("resetZoom") } });
 		this.zoomReadout.addEventListener("click", () => this.resetZoom());
-		const frame = hud.createDiv({ cls: "inkpad-hud-button inkpad-hud-control", attr: { role: "button", tabindex: "0", "aria-label": "Encuadrar contenido" } });
+		const frame = hud.createDiv({ cls: "inkpad-hud-button inkpad-hud-control", attr: { role: "button", tabindex: "0", "aria-label": t("frameContent") } });
 		setIcon(frame, "scan");
 		let frameTouchHandledUntil = 0;
 		frame.addEventListener("pointerup", event => {
@@ -198,11 +199,11 @@ export class InkpadView extends ItemView {
 			this.frameContent();
 		});
 		frame.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); this.frameContent(); } });
-		const focus = leftRail.createDiv({ cls: "inkpad-rail-control", attr: { role: "button", tabindex: "0", "aria-label": "Alternar modo enfoque" } });
+		const focus = leftRail.createDiv({ cls: "inkpad-rail-control", attr: { role: "button", tabindex: "0", "aria-label": t("toggleFocus") } });
 		setIcon(focus, "panel-top-close");
 		focus.addEventListener("click", () => this.toggleFocusMode());
 		focus.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); this.toggleFocusMode(); } });
-		const ink = leftRail.createDiv({ cls: "inkpad-rail-control inkpad-ink-trigger", attr: { role: "button", tabindex: "0", "aria-label": "Color y grosor" } });
+		const ink = leftRail.createDiv({ cls: "inkpad-rail-control inkpad-ink-trigger", attr: { role: "button", tabindex: "0", "aria-label": t("colorAndWidth") } });
 		setIcon(ink, "palette");
 		ink.addEventListener("click", () => this.toggleInkMenu(leftRail));
 		ink.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); this.toggleInkMenu(leftRail); } });
@@ -221,40 +222,40 @@ export class InkpadView extends ItemView {
 
 	private openQuickMenu(clientX?: number, clientY?: number): void {
 		if (this.quickMenu) { this.closeQuickMenu(); return; }
-		const menu = this.viewportEl.createDiv({ cls: "inkpad-quick-menu", attr: { role: "menu", "aria-label": "Herramientas de dibujo" } });
+		const menu = this.viewportEl.createDiv({ cls: "inkpad-quick-menu", attr: { role: "menu", "aria-label": t("drawingTools") } });
 		const action = (icon: string, label: string, callback: () => void, active = false): void => {
 			const button = menu.createEl("button", { cls: active ? "is-active" : "", attr: { "aria-label": label } });
 			setIcon(button, icon); button.createSpan({ text: label });
 			button.addEventListener("click", () => { callback(); this.closeQuickMenu(); });
 		};
-		action("undo-2", "Deshacer", () => this.undo());
-		action("redo-2", "Rehacer", () => this.redo());
+		action("undo-2", t("undo"), () => this.undo());
+		action("redo-2", t("redo"), () => this.redo());
 		menu.createDiv({ cls: "inkpad-menu-divider" });
-		action("bookmark-plus", "Guardar posición actual", () => this.addBookmark());
+		action("bookmark-plus", t("saveCurrentPosition"), () => this.addBookmark());
 		for (const bookmark of this.document.bookmarks ?? []) action("bookmark", bookmark.name, () => this.goToBookmark(bookmark.id));
 		if (this.selectedStrokeIds.size || this.selectedShapeIds.size) {
 			menu.createDiv({ cls: "inkpad-menu-divider" });
-			action("copy-plus", "Duplicar selección", () => this.duplicateSelection());
-			action("palette", "Aplicar color actual", () => this.colorSelection());
-			action("link", "Vincular a nota o URL", () => this.linkSelection());
-			action("image-down", "Exportar selección PNG", () => void this.exportSelectionPng());
-			action("minus", "Convertir en línea", () => this.convertSelectionToShape("line"));
-			action("square", "Convertir en rectángulo", () => this.convertSelectionToShape("rectangle"));
-			action("circle", "Convertir en elipse", () => this.convertSelectionToShape("ellipse"));
-			if (this.selectionLink()) action("external-link", "Abrir vínculo", () => void this.openSelectionLink());
+			action("copy-plus", t("duplicateSelection"), () => this.duplicateSelection());
+			action("palette", t("applyCurrentColor"), () => this.colorSelection());
+			action("link", t("linkToNote"), () => this.linkSelection());
+			action("image-down", t("exportSelectionPng"), () => void this.exportSelectionPng());
+			action("minus", t("convertToLine"), () => this.convertSelectionToShape("line"));
+			action("square", t("convertToRectangle"), () => this.convertSelectionToShape("rectangle"));
+			action("circle", t("convertToEllipse"), () => this.convertSelectionToShape("ellipse"));
+			if (this.selectionLink()) action("external-link", t("openLink"), () => void this.openSelectionLink());
 		}
 		menu.createDiv({ cls: "inkpad-menu-divider" });
-		action("pen-tool", "Pluma", () => { this.tool = "pen"; this.refreshToolbar(); }, this.tool === "pen");
-		action("pencil-ruler", "Lápiz", () => { this.tool = "pencil"; this.refreshToolbar(); }, this.tool === "pencil");
-		action("paintbrush", "Rotulador", () => { this.tool = "marker"; this.refreshToolbar(); }, this.tool === "marker");
-		action("highlighter", "Subrayador", () => { this.tool = "highlighter"; this.refreshToolbar(); }, this.tool === "highlighter");
-		action("eraser", "Borrador", () => { this.tool = "eraser"; this.refreshToolbar(); }, this.tool === "eraser");
-		action("lasso-select", "Lazo", () => { this.tool = "lasso"; this.refreshToolbar(); }, this.tool === "lasso");
+		action("pen-tool", t("pen"), () => { this.tool = "pen"; this.refreshToolbar(); }, this.tool === "pen");
+		action("pencil-ruler", t("pencil"), () => { this.tool = "pencil"; this.refreshToolbar(); }, this.tool === "pencil");
+		action("paintbrush", t("marker"), () => { this.tool = "marker"; this.refreshToolbar(); }, this.tool === "marker");
+		action("highlighter", t("highlighter"), () => { this.tool = "highlighter"; this.refreshToolbar(); }, this.tool === "highlighter");
+		action("eraser", t("eraser"), () => { this.tool = "eraser"; this.refreshToolbar(); }, this.tool === "eraser");
+		action("lasso-select", t("lasso"), () => { this.tool = "lasso"; this.refreshToolbar(); }, this.tool === "lasso");
 		menu.createDiv({ cls: "inkpad-menu-divider" });
-		action("minus", "Línea", () => { this.tool = "line"; this.refreshToolbar(); }, this.tool === "line");
-		action("move-up-right", "Flecha", () => { this.tool = "arrow"; this.refreshToolbar(); }, this.tool === "arrow");
-		action("square", "Rectángulo", () => { this.tool = "rectangle"; this.refreshToolbar(); }, this.tool === "rectangle");
-		action("circle", "Elipse", () => { this.tool = "ellipse"; this.refreshToolbar(); }, this.tool === "ellipse");
+		action("minus", t("line"), () => { this.tool = "line"; this.refreshToolbar(); }, this.tool === "line");
+		action("move-up-right", t("arrow"), () => { this.tool = "arrow"; this.refreshToolbar(); }, this.tool === "arrow");
+		action("square", t("rectangle"), () => { this.tool = "rectangle"; this.refreshToolbar(); }, this.tool === "rectangle");
+		action("circle", t("ellipse"), () => { this.tool = "ellipse"; this.refreshToolbar(); }, this.tool === "ellipse");
 		const viewport = this.viewportEl.getBoundingClientRect();
 		const localX = clientX === undefined ? 12 : clientX - viewport.left;
 		const localY = clientY === undefined ? 12 : clientY - viewport.top;
@@ -279,13 +280,13 @@ export class InkpadView extends ItemView {
 		this.closePopover("bookmark");
 		const menu = parent.createDiv({ cls: "inkpad-bottom-menu inkpad-ink-menu" }); this.inkMenu = menu;
 		const swatches = menu.createDiv({ cls: "inkpad-swatch-row" });
-		const picker = swatches.createEl("button", { cls: "inkpad-color-picker", attr: { "aria-label": "Elegir color personalizado" } });
+		const picker = swatches.createEl("button", { cls: "inkpad-color-picker", attr: { "aria-label": t("chooseCustomColor") } });
 		picker.style.background = this.color;
-		const color = menu.createEl("input", { cls: "inkpad-color-native", type: "color", value: this.color, attr: { "aria-label": "Color personalizado" } });
+		const color = menu.createEl("input", { cls: "inkpad-color-native", type: "color", value: this.color, attr: { "aria-label": t("customColor") } });
 		color.addEventListener("input", () => { this.color = color.value; this.refreshInkMenu(menu, color); });
 		picker.addEventListener("click", () => color.click());
-		for (const value of ["#ffffff", "#111827", "#ef4444", "#2563eb", "#16a34a", "#f59e0b"]) { const swatch = swatches.createEl("button", { cls: "inkpad-swatch", attr: { "aria-label": `Color ${value}`, "data-color": value } }); swatch.style.background = value; swatch.addEventListener("click", () => { this.color = value; color.value = value; this.refreshInkMenu(menu, color); }); }
-		const widthRow = menu.createDiv({ cls: "inkpad-width-row" }); widthRow.createSpan({ text: "Grosor" }); const width = widthRow.createDiv({ cls: "inkpad-width-control", attr: { role: "slider", "aria-label": "Grosor", "aria-valuemin": "1", "aria-valuemax": "16", "aria-valuenow": String(this.width), tabindex: "0" } }); const thumb = width.createDiv({ cls: "inkpad-width-thumb" }); const label = widthRow.createSpan({ cls: "inkpad-width-label", text: `${this.width}px` });
+		for (const value of ["#ffffff", "#111827", "#ef4444", "#2563eb", "#16a34a", "#f59e0b"]) { const swatch = swatches.createEl("button", { cls: "inkpad-swatch", attr: { "aria-label": t("color", { value }), "data-color": value } }); swatch.style.background = value; swatch.addEventListener("click", () => { this.color = value; color.value = value; this.refreshInkMenu(menu, color); }); }
+		const widthRow = menu.createDiv({ cls: "inkpad-width-row" }); widthRow.createSpan({ text: t("strokeWidth") }); const width = widthRow.createDiv({ cls: "inkpad-width-control", attr: { role: "slider", "aria-label": t("strokeWidth"), "aria-valuemin": "1", "aria-valuemax": "16", "aria-valuenow": String(this.width), tabindex: "0" } }); const thumb = width.createDiv({ cls: "inkpad-width-thumb" }); const label = widthRow.createSpan({ cls: "inkpad-width-label", text: `${this.width}px` });
 		const setWidthFromPointer = (clientX: number): void => { const rect = width.getBoundingClientRect(); const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / Math.max(1, rect.width))); this.width = Math.round(1 + ratio * 15); thumb.style.left = `${((this.width - 1) / 15) * 100}%`; width.setAttr("aria-valuenow", String(this.width)); label.setText(`${this.width}px`); };
 		thumb.style.left = `${((this.width - 1) / 15) * 100}%`;
 		width.addEventListener("pointerdown", event => { event.preventDefault(); width.setPointerCapture(event.pointerId); setWidthFromPointer(event.clientX); });
@@ -299,12 +300,12 @@ export class InkpadView extends ItemView {
 	private toggleBookmarkMenu(parent: HTMLElement): void {
 		if (this.bookmarkMenu) { this.closePopover("bookmark"); return; }
 		this.closePopover("ink"); const menu = parent.createDiv({ cls: "inkpad-bottom-menu inkpad-bookmark-menu" }); this.bookmarkMenu = menu;
-		const add = menu.createEl("button", { cls: "inkpad-bookmark-add" }); setIcon(add, "bookmark-plus"); add.createSpan({ text: "Guardar posición actual" }); add.addEventListener("click", () => { this.addBookmark(); this.closePopover("bookmark"); });
-		for (const bookmark of this.document.bookmarks ?? []) { const row = menu.createDiv({ cls: "inkpad-bookmark-row" }); const go = row.createEl("button", { text: bookmark.name }); go.addEventListener("click", () => { this.goToBookmark(bookmark.id); this.closePopover("bookmark"); }); const remove = row.createEl("button", { cls: "inkpad-bookmark-delete", attr: { "aria-label": `Eliminar ${bookmark.name}` } }); setIcon(remove, "trash-2"); remove.addEventListener("click", () => this.deleteBookmark(bookmark.id)); }
+		const add = menu.createEl("button", { cls: "inkpad-bookmark-add" }); setIcon(add, "bookmark-plus"); add.createSpan({ text: t("saveCurrentPosition") }); add.addEventListener("click", () => { this.addBookmark(); this.closePopover("bookmark"); });
+		for (const bookmark of this.document.bookmarks ?? []) { const row = menu.createDiv({ cls: "inkpad-bookmark-row" }); const go = row.createEl("button", { text: bookmark.name }); go.addEventListener("click", () => { this.goToBookmark(bookmark.id); this.closePopover("bookmark"); }); const remove = row.createEl("button", { cls: "inkpad-bookmark-delete", attr: { "aria-label": t("deletePosition", { name: bookmark.name }) } }); setIcon(remove, "trash-2"); remove.addEventListener("click", () => this.deleteBookmark(bookmark.id)); }
 	}
 
 	private addBookmark(): void {
-		const name = window.prompt("Nombre del marcador", `Vista ${((this.document.bookmarks?.length ?? 0) + 1)}`)?.trim();
+		const name = window.prompt(t("bookmarkName"), t("viewNumber", { number: (this.document.bookmarks?.length ?? 0) + 1 }))?.trim();
 		if (!name) return;
 		this.snapshot();
 		this.document.bookmarks = [...(this.document.bookmarks ?? []), { id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`, name, ...this.transform }];
@@ -718,7 +719,7 @@ export class InkpadView extends ItemView {
 	/** Places every piece of ink and every imported item comfortably in view. */
 	public frameContent(): void {
 		const bounds = this.contentBounds();
-		if (!bounds) { new Notice("Aún no hay contenido que encuadrar."); return; }
+		if (!bounds) { new Notice(t("noContentToFrame")); return; }
 		const rect = this.canvas.getBoundingClientRect();
 		const padding = 56;
 		const zoom = Math.min(3, Math.max(0.15, Math.min((rect.width - padding * 2) / bounds.width, (rect.height - padding * 2) / bounds.height)));
@@ -770,7 +771,7 @@ export class InkpadView extends ItemView {
 	}
 
 	private insertText(): void {
-		const text = window.prompt("Texto para el lienzo");
+		const text = window.prompt(t("textForCanvas"));
 		if (!text?.trim()) return;
 		const viewport = this.viewportEl.getBoundingClientRect();
 		this.snapshot();
@@ -781,7 +782,7 @@ export class InkpadView extends ItemView {
 	private editTextElement(id: string): void {
 		const element = this.document.elements.find(item => item.id === id);
 		if (!element || element.kind !== "text") return;
-		const text = window.prompt("Texto para el lienzo", element.text ?? "");
+		const text = window.prompt(t("textForCanvas"), element.text ?? "");
 		if (text === null || text === element.text) return;
 		this.snapshot();
 		element.text = text;
@@ -797,9 +798,9 @@ export class InkpadView extends ItemView {
 			if (element.kind === "image") card.addClass("inkpad-element-image");
 			if (element.kind === "text") {
 				const header = card.createDiv({ cls: "inkpad-element-header" });
-				const edit = header.createEl("button", { cls: "inkpad-element-action", attr: { "aria-label": "Editar texto" } }); setIcon(edit, "pencil"); edit.addEventListener("click", () => this.editTextElement(element.id));
-				const lock = header.createEl("button", { cls: "inkpad-element-action", attr: { "aria-label": element.locked ? "Desbloquear texto" : "Bloquear texto" } }); setIcon(lock, element.locked ? "lock" : "unlock"); lock.addEventListener("click", () => this.toggleElementLock(element.id));
-				const remove = header.createEl("button", { cls: "inkpad-element-action inkpad-element-delete", attr: { "aria-label": "Eliminar texto" } }); setIcon(remove, "trash-2"); remove.addEventListener("click", () => this.removeElement(element.id));
+				const edit = header.createEl("button", { cls: "inkpad-element-action", attr: { "aria-label": t("editText") } }); setIcon(edit, "pencil"); edit.addEventListener("click", () => this.editTextElement(element.id));
+				const lock = header.createEl("button", { cls: "inkpad-element-action", attr: { "aria-label": element.locked ? t("unlockText") : t("lockText") } }); setIcon(lock, element.locked ? "lock" : "unlock"); lock.addEventListener("click", () => this.toggleElementLock(element.id));
+				const remove = header.createEl("button", { cls: "inkpad-element-action inkpad-element-delete", attr: { "aria-label": t("deleteText") } }); setIcon(remove, "trash-2"); remove.addEventListener("click", () => this.removeElement(element.id));
 				header.addEventListener("pointerdown", event => { if (!element.locked && !(event.target as HTMLElement).closest("button")) this.startElementGesture(event, element, "move", header); });
 				card.createDiv({ cls: "inkpad-element-text", text: element.text ?? "" });
 				if (!element.locked) { const resize = card.createDiv({ cls: "inkpad-element-resize" }); resize.addEventListener("pointerdown", event => this.startElementGesture(event, element, "resize", resize)); }
@@ -807,17 +808,17 @@ export class InkpadView extends ItemView {
 			}
 			const header = card.createDiv({ cls: "inkpad-element-header" });
 			if (element.kind === "pdf") {
-				const pages = header.createEl("button", { cls: "inkpad-element-action", attr: { "aria-label": "Alternar altura por páginas" } }); setIcon(pages, "unfold-vertical");
+				const pages = header.createEl("button", { cls: "inkpad-element-action", attr: { "aria-label": t("togglePdfHeight") } }); setIcon(pages, "unfold-vertical");
 				pages.toggleClass("is-active", element.fitPdfPages === true);
 				pages.addEventListener("click", event => { event.preventDefault(); event.stopPropagation(); this.togglePdfPageHeight(element.id); });
 			}
-			const front = header.createEl("button", { cls: "inkpad-element-action", attr: { "aria-label": "Traer al frente" } }); setIcon(front, "bring-to-front");
+			const front = header.createEl("button", { cls: "inkpad-element-action", attr: { "aria-label": t("bringToFront") } }); setIcon(front, "bring-to-front");
 			front.addEventListener("click", event => { event.preventDefault(); event.stopPropagation(); this.bringElementToFront(element.id); });
-			const back = header.createEl("button", { cls: "inkpad-element-action", attr: { "aria-label": "Enviar al fondo" } }); setIcon(back, "send-to-back");
+			const back = header.createEl("button", { cls: "inkpad-element-action", attr: { "aria-label": t("sendToBack") } }); setIcon(back, "send-to-back");
 			back.addEventListener("click", event => { event.preventDefault(); event.stopPropagation(); this.sendElementToBack(element.id); });
-			const lock = header.createEl("button", { cls: "inkpad-element-action", attr: { "aria-label": element.locked ? "Desbloquear elemento" : "Bloquear elemento" } }); setIcon(lock, element.locked ? "lock" : "unlock");
+			const lock = header.createEl("button", { cls: "inkpad-element-action", attr: { "aria-label": element.locked ? t("unlockElement") : t("lockElement") } }); setIcon(lock, element.locked ? "lock" : "unlock");
 			lock.addEventListener("click", event => { event.preventDefault(); event.stopPropagation(); this.toggleElementLock(element.id); });
-			const remove = header.createEl("button", { cls: "inkpad-element-action inkpad-element-delete", attr: { "aria-label": "Eliminar del lienzo" } }); setIcon(remove, "trash-2");
+			const remove = header.createEl("button", { cls: "inkpad-element-action inkpad-element-delete", attr: { "aria-label": t("removeFromCanvas") } }); setIcon(remove, "trash-2");
 			remove.addEventListener("click", event => { event.preventDefault(); event.stopPropagation(); this.removeElement(element.id); });
 			header.addEventListener("pointerdown", event => {
 				if ((event.target as HTMLElement).closest("button")) return;
@@ -825,7 +826,7 @@ export class InkpadView extends ItemView {
 			});
 			const source = this.app.vault.getAbstractFileByPath(element.path);
 			if (!(source instanceof TFile)) {
-				card.createDiv({ cls: "inkpad-element-missing", text: `Archivo no encontrado: ${element.path}` });
+				card.createDiv({ cls: "inkpad-element-missing", text: t("fileNotFound", { path: element.path }) });
 				continue;
 			}
 			const body = card.createDiv({ cls: "inkpad-element-body" });
@@ -840,9 +841,9 @@ export class InkpadView extends ItemView {
 				body.createEl("audio", { attr: { src: this.app.vault.getResourcePath(source), controls: "true" } });
 			} else {
 				try { await MarkdownRenderer.renderMarkdown(await this.app.vault.cachedRead(source), body, source.path, this); }
-				catch { body.setText("No se pudo previsualizar esta nota."); }
+				catch { body.setText(t("couldNotPreviewNote")); }
 			}
-			if (!element.locked) { const resize = card.createDiv({ cls: "inkpad-element-resize", attr: { "aria-label": "Cambiar tamaño" } }); resize.addEventListener("pointerdown", event => this.startElementGesture(event, element, "resize", resize)); }
+			if (!element.locked) { const resize = card.createDiv({ cls: "inkpad-element-resize", attr: { "aria-label": t("resize") } }); resize.addEventListener("pointerdown", event => this.startElementGesture(event, element, "resize", resize)); }
 			if (generation !== this.elementRenderGeneration) return;
 		}
 		this.positionElements();
@@ -861,7 +862,7 @@ export class InkpadView extends ItemView {
 	}
 
 	private async renderPdfCanvases(body: HTMLElement, file: TFile, element: InkElement, generation: number): Promise<void> {
-		const loading = body.createDiv({ cls: "inkpad-pdf-loading", text: "Cargando PDF…" });
+		const loading = body.createDiv({ cls: "inkpad-pdf-loading", text: t("loadingPdf") });
 		try {
 			const info = await renderPdfPages(this.app.vault, file, body, element.width, element.fitPdfPages === true, () => generation === this.elementRenderGeneration);
 			loading.remove();
@@ -873,7 +874,7 @@ export class InkpadView extends ItemView {
 			this.positionElements();
 			if (changed) this.scheduleSave();
 		} catch (error) {
-			loading.setText("No se pudo cargar este PDF.");
+			loading.setText(t("couldNotLoadPdf"));
 			console.error("Inkpad PDF render error", error);
 		}
 	}
@@ -1101,7 +1102,7 @@ export class InkpadView extends ItemView {
 
 	private convertSelectionToShape(type: InkShape["type"]): void {
 		const selected = this.document.strokes.filter(stroke => this.selectedStrokeIds.has(stroke.id));
-		if (!selected.length) { new Notice("Selecciona al menos un trazo para convertirlo."); return; }
+		if (!selected.length) { new Notice(t("selectStrokeToConvert")); return; }
 		this.snapshot();
 		const shapes = selected.map(stroke => {
 			const points = stroke.points;
@@ -1123,7 +1124,7 @@ export class InkpadView extends ItemView {
 
 	private linkSelection(): void {
 		if (!this.selectedStrokeIds.size && !this.selectedShapeIds.size) return;
-		const link = window.prompt("Ruta de nota del vault o URL", this.selectionLink() ?? "")?.trim();
+		const link = window.prompt(t("vaultNoteOrUrl"), this.selectionLink() ?? "")?.trim();
 		if (link === undefined) return;
 		this.snapshot();
 		this.document.strokes = this.document.strokes.map(stroke => this.selectedStrokeIds.has(stroke.id) ? { ...stroke, link: link || undefined } : stroke);
@@ -1149,7 +1150,7 @@ export class InkpadView extends ItemView {
 		const bounds = this.inkBounds();
 		const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${bounds.left} ${bounds.top} ${bounds.width} ${bounds.height}">${strokeMarkup}${shapeMarkup}</svg>`;
 		const path = this.nextExportPath("svg");
-		await this.app.vault.create(path, svg); new Notice(`SVG exportado: ${path}`);
+		await this.app.vault.create(path, svg); new Notice(t("svgExported", { path }));
 	}
 
 	private strokeSvgPath(points: InkPoint[]): string {
@@ -1179,15 +1180,15 @@ export class InkpadView extends ItemView {
 			for (const shape of this.document.shapes) this.drawShape(shape);
 		} finally { this.context = visibleContext; }
 		const blob = await new Promise<Blob | null>(resolve => exportCanvas.toBlob(resolve, "image/png"));
-		if (!blob) { new Notice("Inkpad no pudo crear el PNG."); return; }
+		if (!blob) { new Notice(t("couldNotCreatePng")); return; }
 		await this.app.vault.createBinary(this.nextExportPath("png"), await blob.arrayBuffer());
-		new Notice("PNG de tinta exportado.");
+		new Notice(t("pngExported"));
 	}
 
 	private async exportSelectionPng(): Promise<void> {
 		if (!this.file) return;
 		const selected = this.selectedBounds();
-		if (!selected) { new Notice("Selecciona tinta o formas antes de exportar."); return; }
+		if (!selected) { new Notice(t("selectInkToExport")); return; }
 		const padding = 24; const width = selected.right - selected.left + padding * 2; const height = selected.bottom - selected.top + padding * 2;
 		const exportCanvas = document.createElement("canvas"); const scale = 2;
 		exportCanvas.width = Math.ceil(width * scale); exportCanvas.height = Math.ceil(height * scale);
@@ -1200,9 +1201,9 @@ export class InkpadView extends ItemView {
 			for (const shape of this.document.shapes) if (this.selectedShapeIds.has(shape.id)) this.drawShape(shape);
 		} finally { this.context = visibleContext; }
 		const blob = await new Promise<Blob | null>(resolve => exportCanvas.toBlob(resolve, "image/png"));
-		if (!blob) { new Notice("Inkpad no pudo crear el PNG de la selección."); return; }
+		if (!blob) { new Notice(t("couldNotCreateSelectionPng")); return; }
 		await this.app.vault.createBinary(this.nextExportPath("png", "selección"), await blob.arrayBuffer());
-		new Notice("Selección exportada como PNG.");
+		new Notice(t("selectionExported"));
 	}
 
 	private inkBounds(): { left: number; top: number; width: number; height: number } {
@@ -1366,7 +1367,7 @@ export class InkpadView extends ItemView {
 
 	private scheduleSave(): void {
 		if (this.saveTimer !== null) window.clearTimeout(this.saveTimer);
-		this.setSaveState("Cambios pendientes");
+		this.setSaveState(t("pendingChanges"));
 		// Serialising every point in a long note is main-thread work. Never let an
 		// old 800 ms setting compete with normal pauses between handwritten words.
 		const delay = Math.max(1800, this.plugin.settings.autosaveDelayMs);
@@ -1380,24 +1381,24 @@ export class InkpadView extends ItemView {
 	private async saveNow(): Promise<void> {
 		await this.flushSave();
 		await this.queuedWrite;
-		if (!this.changedDuringEdit) new Notice("Inkpad: guardado en el vault.");
+		if (!this.changedDuringEdit) new Notice(t("savedToVault"));
 	}
 
 	private async persist(): Promise<void> {
 		if (!this.file) return;
-		if (this.changedDuringEdit) { this.changedDuringEdit = false; new Notice("Inkpad: el archivo cambió en otro dispositivo. Recarga antes de seguir para no sobrescribirlo."); return; }
-		this.setSaveState("Guardando…");
+		if (this.changedDuringEdit) { this.changedDuringEdit = false; new Notice(t("changedElsewhere")); return; }
+		this.setSaveState(t("saving"));
 		this.document.viewport = { ...this.transform };
 		let content: string;
 		try { content = serializeInkDocument(this.document); }
-		catch { this.setSaveState("Error al guardar"); new Notice("Inkpad no pudo preparar el archivo para guardarlo. Tu dibujo sigue abierto y no se ha sobrescrito."); return; }
+		catch { this.setSaveState(t("saveError")); new Notice(t("couldNotPrepareSave")); return; }
 		this.queuedWrite = this.queuedWrite.catch(() => undefined).then(async () => {
 			if (!this.file) return;
 			this.writing = true;
-			try { await this.app.vault.modify(this.file, content); this.lastWritten = content; this.setSaveState("Guardado"); }
+			try { await this.app.vault.modify(this.file, content); this.lastWritten = content; this.setSaveState(t("saved")); }
 			finally { this.writing = false; }
 		});
 		try { await this.queuedWrite; }
-		catch { this.setSaveState("Error al guardar"); new Notice("Inkpad no pudo guardar todavía. Reinténtalo cuando vuelva la sincronización."); }
+		catch { this.setSaveState(t("saveError")); new Notice(t("couldNotSave")); }
 	}
 }

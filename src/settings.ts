@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import InkpadPlugin from "./main";
+import { t } from "./i18n";
 
 export interface InkpadSettings {
 	autosaveDelayMs: number;
@@ -23,20 +24,20 @@ export class InkpadSettingsTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
-		new Setting(containerEl).setName("Pausa antes de guardar").setDesc("Agrupa trazos terminados antes de escribir el archivo. Una pausa mayor protege la fluidez del Pencil en dibujos largos.")
+		new Setting(containerEl).setName(t("autosaveDelay")).setDesc(t("autosaveDelayDesc"))
 			.addSlider(slider => slider.setLimits(1000, 5000, 250).setValue(Math.max(1000, this.plugin.settings.autosaveDelayMs)).setDynamicTooltip().onChange(async value => {
 				this.plugin.settings.autosaveDelayMs = value;
 				await this.plugin.saveSettings();
 			}));
-		new Setting(containerEl).setName("Color predeterminado").addColorPicker(picker => picker.setValue(this.plugin.settings.defaultColor).onChange(async value => {
+		new Setting(containerEl).setName(t("defaultColor")).addColorPicker(picker => picker.setValue(this.plugin.settings.defaultColor).onChange(async value => {
 			this.plugin.settings.defaultColor = value;
 			await this.plugin.saveSettings();
 		}));
-		new Setting(containerEl).setName("Papel del lienzo").addDropdown(dropdown => dropdown
-			.addOption("grid", "Cuadrícula").addOption("dots", "Puntos").addOption("lines", "Rayado").addOption("cornell", "Cornell").addOption("music", "Pentagrama").addOption("weekly", "Plan semanal").addOption("blank", "Blanco")
+		new Setting(containerEl).setName(t("canvasPaper")).addDropdown(dropdown => dropdown
+			.addOption("grid", t("grid")).addOption("dots", t("dots")).addOption("lines", t("ruled")).addOption("cornell", "Cornell").addOption("music", t("pentagram")).addOption("weekly", t("weekly")).addOption("blank", t("blank"))
 			.setValue(this.plugin.settings.paperStyle).onChange(async value => { this.plugin.settings.paperStyle = value as InkpadSettings["paperStyle"]; await this.plugin.saveSettings(); }));
-		new Setting(containerEl).setName("Sensibilidad de presión").setDesc("Fija mantiene el mismo grosor; sutil es la recomendada para apuntes; natural responde más a la presión del Pencil.")
-			.addDropdown(dropdown => dropdown.addOption("fixed", "Fija").addOption("subtle", "Sutil").addOption("natural", "Natural")
+		new Setting(containerEl).setName(t("pressureResponse")).setDesc(t("pressureResponseDesc"))
+			.addDropdown(dropdown => dropdown.addOption("fixed", t("fixed")).addOption("subtle", t("subtle")).addOption("natural", t("natural"))
 				.setValue(this.plugin.settings.pressureResponse).onChange(async value => { this.plugin.settings.pressureResponse = value as InkpadSettings["pressureResponse"]; await this.plugin.saveSettings(); }));
 	}
 }

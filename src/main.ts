@@ -3,6 +3,7 @@ import { InkpadSettings, DEFAULT_SETTINGS, InkpadSettingsTab } from "./settings"
 import { INKPAD_VIEW, InkpadView } from "./ink-view";
 import { EMPTY_DOCUMENT } from "./types";
 import { serializeInkDocument } from "./format";
+import { t } from "./i18n";
 
 export default class InkpadPlugin extends Plugin {
 	settings: InkpadSettings = DEFAULT_SETTINGS;
@@ -12,8 +13,8 @@ export default class InkpadPlugin extends Plugin {
 		this.registerView(INKPAD_VIEW, (leaf: WorkspaceLeaf) => new InkpadView(leaf, this));
 		this.registerExtensions(["ink"], INKPAD_VIEW);
 		this.addSettingTab(new InkpadSettingsTab(this.app, this));
-		this.addCommand({ id: "new-infinite-drawing", name: "Crear dibujo infinito", callback: () => void this.createDrawing() });
-		this.addRibbonIcon("pen-line", "Crear dibujo Inkpad", () => void this.createDrawing());
+		this.addCommand({ id: "new-infinite-drawing", name: t("newInfiniteDrawing"), callback: () => void this.createDrawing() });
+		this.addRibbonIcon("pen-line", t("createInkpadDrawing"), () => void this.createDrawing());
 		this.registerEvent(this.app.vault.on("modify", file => {
 			if (!(file instanceof TFile)) return;
 			for (const leaf of this.app.workspace.getLeavesOfType(INKPAD_VIEW)) void (leaf.view as InkpadView).onVaultFileChange(file);
@@ -40,10 +41,10 @@ export default class InkpadPlugin extends Plugin {
 			// openFile selects the registered .ink view itself, which is more resilient
 			// than constructing view state while a workspace is still settling.
 			await leaf.openFile(file, { active: true });
-			new Notice(`Dibujo Inkpad creado: ${file.basename}`);
+			new Notice(t("drawingCreated", { name: file.basename }));
 		} catch (error) {
 			console.error("Inkpad no pudo crear el dibujo", error);
-			new Notice("Inkpad no pudo crear el dibujo. Abre la consola de desarrollador para ver el error.");
+			new Notice(t("couldNotCreateDrawing"));
 		}
 	}
 }

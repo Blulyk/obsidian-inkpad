@@ -1,6 +1,7 @@
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import type { TFile, Vault } from "obsidian";
 import workerSource from "inkpad-pdf-worker-source";
+import { t } from "./i18n";
 
 
 // PDF.js workers share the `pdfjsWorker` global when they run in the page.
@@ -46,7 +47,7 @@ export async function renderPdfPages(vault: Vault, file: TFile, container: HTMLE
 			const cssScale = Math.max(0.2, width / natural.width);
 			const pixelRatio = Math.min(requestedPixelRatio, Math.sqrt(maxPixelsPerPage / (natural.width * natural.height * cssScale * cssScale)));
 			const viewport = page.getViewport({ scale: cssScale * pixelRatio });
-			const canvas = container.createEl("canvas", { cls: "inkpad-pdf-page", attr: { "aria-label": `${file.basename}, página ${index}` } });
+			const canvas = container.createEl("canvas", { cls: "inkpad-pdf-page", attr: { "aria-label": `${file.basename}, ${t("page")} ${index}` } });
 			canvas.width = Math.ceil(viewport.width);
 			canvas.height = Math.ceil(viewport.height);
 			// The bitmap keeps its intrinsic aspect ratio; CSS makes it inherit the
