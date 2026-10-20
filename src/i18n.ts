@@ -24,7 +24,7 @@ const EN = {
 	line: "Line", arrow: "Arrow", rectangle: "Rectangle", ellipse: "Ellipse",
 	autosaveDelay: "Pause before saving", autosaveDelayDesc: "Groups finished strokes before writing the file. A longer pause protects Pencil responsiveness in long drawings.", defaultColor: "Default color", canvasPaper: "Canvas paper", pressureResponse: "Pressure response", pressureResponseDesc: "Fixed keeps the same width; subtle is recommended for notes; natural responds more to Pencil pressure.",
 	grid: "Grid", dots: "Dots", ruled: "Ruled", pentagram: "Music staff", weekly: "Weekly planner", blank: "Blank", fixed: "Fixed", subtle: "Subtle", natural: "Natural",
-	page: "page",
+	page: "page", confirm: "Confirm", cancel: "Cancel",
 } as const;
 
 const ES: Record<keyof typeof EN, string> = {
@@ -47,7 +47,7 @@ const ES: Record<keyof typeof EN, string> = {
 	line: "Línea", arrow: "Flecha", rectangle: "Rectángulo", ellipse: "Elipse",
 	autosaveDelay: "Pausa antes de guardar", autosaveDelayDesc: "Agrupa trazos terminados antes de escribir el archivo. Una pausa mayor protege la fluidez del Pencil en dibujos largos.", defaultColor: "Color predeterminado", canvasPaper: "Papel del lienzo", pressureResponse: "Sensibilidad de presión", pressureResponseDesc: "Fija mantiene el mismo grosor; sutil es la recomendada para apuntes; natural responde más a la presión del Pencil.",
 	grid: "Cuadrícula", dots: "Puntos", ruled: "Rayado", pentagram: "Pentagrama", weekly: "Plan semanal", blank: "Blanco", fixed: "Fija", subtle: "Sutil", natural: "Natural",
-	page: "página",
+	page: "página", confirm: "Aceptar", cancel: "Cancelar",
 };
 
 export type TranslationKey = keyof typeof EN;

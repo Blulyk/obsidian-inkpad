@@ -1,4 +1,4 @@
-import { ItemView, MarkdownRenderer, Notice, setIcon, TFile, WorkspaceLeaf } from "obsidian";
+import { ItemView, MarkdownRenderer, Notice, Platform, setIcon, TFile, WorkspaceLeaf } from "obsidian";
 import { isInkpadDocument, parseInkDocument, serializeInkDocument } from "./format";
 import InkpadPlugin from "./main";
 import { EMPTY_DOCUMENT, InkDocument, InkPoint, InkShape, InkStroke, Tool } from "./types";
@@ -6,6 +6,7 @@ import { InkElement } from "./types";
 import { VaultEmbedPickerModal } from "./vault-embed-picker";
 import { renderPdfPages } from "./pdf-renderer";
 import { t } from "./i18n";
+import { TextInputModal } from "./text-input-modal";
 
 export const INKPAD_VIEW = "inkpad-canvas";
 
@@ -305,11 +306,12 @@ export class InkpadView extends ItemView {
 	}
 
 	private addBookmark(): void {
-		const name = window.prompt(t("bookmarkName"), t("viewNumber", { number: (this.document.bookmarks?.length ?? 0) + 1 }))?.trim();
-		if (!name) return;
-		this.snapshot();
-		this.document.bookmarks = [...(this.document.bookmarks ?? []), { id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`, name, ...this.transform }];
-		this.scheduleSave();
+		this.openTextModal(t("bookmarkName"), t("viewNumber", { number: (this.document.bookmarks?.length ?? 0) + 1 }), name => {
+			if (!name) return;
+			this.snapshot();
+			this.document.bookmarks = [...(this.document.bookmarks ?? []), { id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`, name, ...this.transform }];
+			this.scheduleSave();
+		});
 	}
 
 	private goToBookmark(id: string): void {
@@ -562,7 +564,7 @@ export class InkpadView extends ItemView {
 	/** Coalesces high-rate wheel, trackpad and middle-button updates into display frames. */
 	private requestNavigationRender(): void {
 		if (this.navigationRenderFrame !== null) return;
-		this.navigationRenderFrame = requestAnimationFrame(() => {
+		this.navigationRenderFrame = window.requestAnimationFrame(() => {
 			this.navigationRenderFrame = null;
 			this.render();
 		});
@@ -574,7 +576,7 @@ export class InkpadView extends ItemView {
 		if (pending && pending.stroke === stroke) pending.points.push(...points);
 		else this.pendingMouseInk = { stroke, first, points: [...points] };
 		if (this.mouseInkFrame !== null) return;
-		this.mouseInkFrame = requestAnimationFrame(() => {
+		this.mouseInkFrame = window.requestAnimationFrame(() => {
 			this.mouseInkFrame = null;
 			this.flushMouseInk();
 		});
@@ -647,8 +649,8 @@ export class InkpadView extends ItemView {
 		const padding = Math.max(180, Math.min(360, Math.round(Math.max(width, height) * .28)));
 		// A high-DPI desktop cache with overscan can exceed 100 MB.  Windows is
 		// happiest with a 1x navigation bitmap; final ink remains vector sharp.
-		const cachePixelRatio = /Windows/i.test(navigator.userAgent) ? 1 : this.pixelRatio;
-		const cacheCanvas = document.createElement("canvas");
+		const cachePixelRatio = Platform.isWin ? 1 : this.pixelRatio;
+		const cacheCanvas = this.createDetachedCanvas();
 		cacheCanvas.width = Math.ceil((width + padding * 2) * cachePixelRatio);
 		cacheCanvas.height = Math.ceil((height + padding * 2) * cachePixelRatio);
 		const cacheContext = cacheCanvas.getContext("2d", { alpha: true, desynchronized: true });
@@ -665,6 +667,13 @@ export class InkpadView extends ItemView {
 		this.inkRenderCache = { canvas: cacheCanvas, width, height, padding, pixelRatio: cachePixelRatio, transform: { ...this.transform } };
 		this.inkCacheDirty = false;
 		this.context.drawImage(cacheCanvas, -padding, -padding, width + padding * 2, height + padding * 2);
+	}
+
+	/** Uses Obsidian's DOM helper while keeping render caches out of the live tree. */
+	private createDetachedCanvas(): HTMLCanvasElement {
+		const canvas = this.containerEl.createEl("canvas");
+		canvas.remove();
+		return canvas;
 	}
 
 	private drawInkDirect(): void {
@@ -771,22 +780,24 @@ export class InkpadView extends ItemView {
 	}
 
 	private insertText(): void {
-		const text = window.prompt(t("textForCanvas"));
-		if (!text?.trim()) return;
-		const viewport = this.viewportEl.getBoundingClientRect();
-		this.snapshot();
-		this.document.elements.push({ id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`, path: "", kind: "text", text, x: (viewport.width / 2 - this.transform.x) / this.transform.zoom, y: (viewport.height / 2 - this.transform.y) / this.transform.zoom, width: 320, height: 100 });
-		void this.renderElements(); this.scheduleSave();
+		this.openTextModal(t("textForCanvas"), "", text => {
+			if (!text) return;
+			const viewport = this.viewportEl.getBoundingClientRect();
+			this.snapshot();
+			this.document.elements.push({ id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`, path: "", kind: "text", text, x: (viewport.width / 2 - this.transform.x) / this.transform.zoom, y: (viewport.height / 2 - this.transform.y) / this.transform.zoom, width: 320, height: 100 });
+			void this.renderElements(); this.scheduleSave();
+		});
 	}
 
 	private editTextElement(id: string): void {
 		const element = this.document.elements.find(item => item.id === id);
 		if (!element || element.kind !== "text") return;
-		const text = window.prompt(t("textForCanvas"), element.text ?? "");
-		if (text === null || text === element.text) return;
-		this.snapshot();
-		element.text = text;
-		void this.renderElements(); this.scheduleSave();
+		this.openTextModal(t("textForCanvas"), element.text ?? "", text => {
+			if (text === null || text === element.text) return;
+			this.snapshot();
+			element.text = text;
+			void this.renderElements(); this.scheduleSave();
+		});
 	}
 
 	private async renderElements(): Promise<void> {
@@ -840,7 +851,7 @@ export class InkpadView extends ItemView {
 			} else if (element.kind === "audio") {
 				body.createEl("audio", { attr: { src: this.app.vault.getResourcePath(source), controls: "true" } });
 			} else {
-				try { await MarkdownRenderer.renderMarkdown(await this.app.vault.cachedRead(source), body, source.path, this); }
+				try { await MarkdownRenderer.render(this.app, await this.app.vault.cachedRead(source), body, source.path, this); }
 				catch { body.setText(t("couldNotPreviewNote")); }
 			}
 			if (!element.locked) { const resize = card.createDiv({ cls: "inkpad-element-resize", attr: { "aria-label": t("resize") } }); resize.addEventListener("pointerdown", event => this.startElementGesture(event, element, "resize", resize)); }
@@ -1124,12 +1135,17 @@ export class InkpadView extends ItemView {
 
 	private linkSelection(): void {
 		if (!this.selectedStrokeIds.size && !this.selectedShapeIds.size) return;
-		const link = window.prompt(t("vaultNoteOrUrl"), this.selectionLink() ?? "")?.trim();
-		if (link === undefined) return;
-		this.snapshot();
-		this.document.strokes = this.document.strokes.map(stroke => this.selectedStrokeIds.has(stroke.id) ? { ...stroke, link: link || undefined } : stroke);
-		this.document.shapes = this.document.shapes.map(shape => this.selectedShapeIds.has(shape.id) ? { ...shape, link: link || undefined } : shape);
-		this.scheduleSave();
+		this.openTextModal(t("vaultNoteOrUrl"), this.selectionLink() ?? "", link => {
+			if (link === null) return;
+			this.snapshot();
+			this.document.strokes = this.document.strokes.map(stroke => this.selectedStrokeIds.has(stroke.id) ? { ...stroke, link: link || undefined } : stroke);
+			this.document.shapes = this.document.shapes.map(shape => this.selectedShapeIds.has(shape.id) ? { ...shape, link: link || undefined } : shape);
+			this.scheduleSave();
+		});
+	}
+
+	private openTextModal(label: string, initialValue: string, onSubmit: (value: string | null) => void): void {
+		new TextInputModal(this.app, label, initialValue, value => onSubmit(value?.trim() ?? null)).open();
 	}
 
 	private async openSelectionLink(): Promise<void> {
@@ -1168,7 +1184,7 @@ export class InkpadView extends ItemView {
 		if (!this.file) return;
 		const bounds = this.inkBounds();
 		const scale = 2;
-		const exportCanvas = document.createElement("canvas");
+		const exportCanvas = this.createDetachedCanvas();
 		exportCanvas.width = Math.ceil(bounds.width * scale); exportCanvas.height = Math.ceil(bounds.height * scale);
 		const exportContext = exportCanvas.getContext("2d");
 		if (!exportContext) return;
@@ -1190,7 +1206,7 @@ export class InkpadView extends ItemView {
 		const selected = this.selectedBounds();
 		if (!selected) { new Notice(t("selectInkToExport")); return; }
 		const padding = 24; const width = selected.right - selected.left + padding * 2; const height = selected.bottom - selected.top + padding * 2;
-		const exportCanvas = document.createElement("canvas"); const scale = 2;
+		const exportCanvas = this.createDetachedCanvas(); const scale = 2;
 		exportCanvas.width = Math.ceil(width * scale); exportCanvas.height = Math.ceil(height * scale);
 		const exportContext = exportCanvas.getContext("2d"); if (!exportContext) return;
 		exportContext.scale(scale, scale); exportContext.translate(-selected.left + padding, -selected.top + padding);

@@ -25,7 +25,7 @@ export class InkpadSettingsTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 		new Setting(containerEl).setName(t("autosaveDelay")).setDesc(t("autosaveDelayDesc"))
-			.addSlider(slider => slider.setLimits(1000, 5000, 250).setValue(Math.max(1000, this.plugin.settings.autosaveDelayMs)).setDynamicTooltip().onChange(async value => {
+			.addSlider(slider => slider.setLimits(1000, 5000, 250).setValue(Math.max(1000, this.plugin.settings.autosaveDelayMs)).onChange(async value => {
 				this.plugin.settings.autosaveDelayMs = value;
 				await this.plugin.saveSettings();
 			}));

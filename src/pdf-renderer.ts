@@ -36,7 +36,7 @@ export async function renderPdfPages(vault: Vault, file: TFile, container: HTMLE
 		// A long deck can otherwise leave tens of 2× canvases resident (hundreds of
 		// MB on an iPad). One physical pixel per CSS pixel is legible at the normal
 		// canvas scale and keeps pencil input responsive while all pages are shown.
-		const requestedPixelRatio = allPages ? 0.8 : Math.min(globalThis.devicePixelRatio || 1, 1.5);
+		const requestedPixelRatio = allPages ? 0.8 : Math.min(window.devicePixelRatio || 1, 1.5);
 		// Bound the entire long-document preview as well as individual pages. A
 		// 30-slide PDF must not create 30 full-size GPU textures behind the ink.
 		const totalPreviewPixelBudget = 4_000_000;
@@ -52,14 +52,12 @@ export async function renderPdfPages(vault: Vault, file: TFile, container: HTMLE
 			canvas.height = Math.ceil(viewport.height);
 			// The bitmap keeps its intrinsic aspect ratio; CSS makes it inherit the
 			// element's world-space width, so it zooms exactly with the canvas.
-			canvas.style.width = "100%";
-			canvas.style.height = "auto";
 			const context = canvas.getContext("2d", { alpha: false });
 			if (context) await page.render({ canvasContext: context, viewport }).promise;
 			page.cleanup();
 			// Return to the UI queue between pages, so importing a long slide deck
 			// never monopolises touch and Pencil events.
-			if (index < count) await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+			if (index < count) await new Promise<void>(resolve => window.requestAnimationFrame(() => resolve()));
 		}
 		return { pageCount: document.numPages, pageAspect };
 	} finally {

@@ -21,7 +21,9 @@ export default class InkpadPlugin extends Plugin {
 		}));
 	}
 
-	onunload(): void { this.app.workspace.detachLeavesOfType(INKPAD_VIEW); }
+	// Views are owned by the workspace. Detaching them here would discard a user's
+	// chosen layout when the plugin is reloaded.
+	onunload(): void {}
 
 	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
