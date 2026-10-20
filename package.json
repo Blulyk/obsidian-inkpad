@@ -1,0 +1,23 @@
+{
+  "name": "obsidian-inkpad",
+  "version": "1.0.0",
+  "private": false,
+  "description": "Low-latency infinite drawing canvas for Obsidian",
+  "main": "main.js",
+  "scripts": {
+    "build": "tsc --noEmit && node esbuild.config.mjs production",
+    "dev": "node esbuild.config.mjs",
+    "test": "tsx tests/format.test.ts",
+    "test:performance": "tsx tests/performance.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "esbuild": "^0.25.5",
+    "obsidian": "latest",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^4.10.38"
+  }
+}

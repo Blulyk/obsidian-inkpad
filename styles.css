@@ -1,0 +1,103 @@
+.inkpad-view { display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--background-primary); }
+.inkpad-toolbar { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; padding: max(10px, env(safe-area-inset-top)) 12px 10px; border-bottom: 1px solid var(--background-modifier-border); background: var(--background-secondary); }
+.inkpad-focus-mode .inkpad-toolbar { display: none; }
+@supports (color: color-mix(in srgb, black, white)) { .inkpad-toolbar { border-bottom-color: color-mix(in srgb, var(--background-modifier-border) 72%, transparent); background: color-mix(in srgb, var(--background-secondary) 84%, transparent); } }
+@supports (backdrop-filter: blur(1px)) { .inkpad-toolbar { background: color-mix(in srgb, var(--background-secondary) 72%, transparent); backdrop-filter: saturate(150%) blur(18px); -webkit-backdrop-filter: saturate(150%) blur(18px); } }
+.inkpad-toolbar-group { display: flex; align-items: center; flex: 0 0 auto; gap: 3px; padding: 3px; border: 1px solid var(--background-modifier-border); border-radius: 13px; background: var(--background-primary); box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+@supports (color: color-mix(in srgb, black, white)) { .inkpad-toolbar-group { border-color: color-mix(in srgb, var(--background-modifier-border) 82%, transparent); background: color-mix(in srgb, var(--background-primary) 46%, transparent); } }
+.inkpad-icon-button { display: grid; width: 38px; height: 38px; place-items: center; padding: 0; border: 0; border-radius: 10px; color: var(--text-muted); background: transparent; transition: transform 120ms ease, background 120ms ease, color 120ms ease; touch-action: manipulation; }
+.inkpad-icon-button svg { width: 19px; height: 19px; stroke-width: 1.8; }
+.inkpad-icon-button:active { transform: scale(.92); background: color-mix(in srgb, var(--interactive-accent) 20%, transparent); }
+.inkpad-icon-button:hover { color: var(--text-normal); background: var(--background-modifier-hover); }
+.inkpad-tool.is-active { color: var(--text-on-accent); background: var(--interactive-accent); box-shadow: 0 1px 5px color-mix(in srgb, var(--interactive-accent) 50%, transparent); }
+.inkpad-destructive:active { color: var(--text-error); }
+.inkpad-color-group { gap: 7px; padding-inline: 7px; }
+.inkpad-color { flex: 0 0 auto; width: 30px; height: 30px; padding: 1px; border: 2px solid var(--background-modifier-border); border-radius: 50%; background: transparent; overflow: hidden; }
+.inkpad-color-picker { flex: 0 0 30px; width: 30px !important; min-width: 0 !important; max-width: 30px; height: 30px !important; min-height: 0 !important; max-height: 30px; padding: 0 !important; border: 3px solid var(--background-modifier-border); border-radius: 50%; appearance: none; -webkit-appearance: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,.28); touch-action: manipulation; }
+.inkpad-color-native { position: absolute; width: 1px; height: 1px; padding: 0; opacity: 0; pointer-events: none; }
+.inkpad-width { width: 84px; height: 6px; padding: 0; border: 0; border-radius: 999px; appearance: none; -webkit-appearance: none; background: var(--background-modifier-border); accent-color: var(--interactive-accent); }
+.inkpad-width::-webkit-slider-thumb { width: 18px; height: 18px; border: 2px solid var(--background-modifier-border); border-radius: 50%; appearance: none; -webkit-appearance: none; background: var(--background-primary); box-shadow: 0 1px 4px rgba(0,0,0,.24); }
+.inkpad-width-control { position: relative; height: 30px; min-width: 0; cursor: pointer; touch-action: none; }
+.inkpad-width-control::before { position: absolute; top: 12px; right: 0; left: 0; height: 6px; border-radius: 999px; background: var(--background-modifier-border); content: ""; }
+.inkpad-width-thumb { position: absolute; z-index: 1; top: 6px; width: 18px; height: 18px; border: 2px solid var(--background-modifier-border); border-radius: 50%; box-sizing: border-box; transform: translateX(-50%); background: var(--background-primary); box-shadow: 0 1px 4px rgba(0,0,0,.24); pointer-events: none; }
+.inkpad-width-label { min-width: 27px; color: var(--text-muted); font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }
+.inkpad-swatch { flex: 0 0 auto; width: 18px; min-height: 18px !important; height: 18px; padding: 0 !important; border: 2px solid var(--background-modifier-border); border-radius: 50% !important; box-shadow: inset 0 0 0 1px rgba(0,0,0,.28); touch-action: manipulation; }
+.inkpad-swatch[aria-pressed="true"] { outline: 2px solid var(--interactive-accent); outline-offset: 2px; }
+.inkpad-viewport { position: relative; flex: 1; min-height: 0; overflow: hidden; background: var(--background-primary); }
+.inkpad-canvas { position: absolute; inset: 0; z-index: 2; display: block; width: 100%; height: 100%; contain: strict; touch-action: none; -webkit-user-select: none; user-select: none; cursor: crosshair; }
+.inkpad-elements { position: absolute; inset: 0; z-index: 3; overflow: hidden; contain: strict; pointer-events: none; }
+.inkpad-bottom-dock { position: absolute; z-index: 5; right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); }
+.inkpad-left-rail { position: absolute; z-index: 6; left: max(12px, env(safe-area-inset-left)); bottom: max(12px, env(safe-area-inset-bottom)); display: flex; flex-direction: column-reverse; gap: 6px; }
+.inkpad-bookmark-controls { position: absolute; z-index: 5; left: max(58px, calc(env(safe-area-inset-left) + 46px)); bottom: max(12px, env(safe-area-inset-bottom)); }
+.inkpad-viewport-hud { box-sizing: border-box; display: flex; align-items: center; gap: 3px; padding: 4px; overflow: visible; border: 1px solid var(--background-modifier-border); border-radius: 12px; color: var(--text-muted); background: var(--background-primary); box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+.inkpad-bottom-controls { position: relative; display: flex; gap: 5px; }
+.inkpad-bottom-button { display: grid; width: 38px; height: 38px; place-items: center; padding: 0; border: 1px solid var(--background-modifier-border); border-radius: 12px; color: var(--text-muted); background: var(--background-primary); box-shadow: 0 6px 18px rgba(0,0,0,.12); touch-action: manipulation; }
+.inkpad-bottom-button svg { width: 18px; height: 18px; }
+.inkpad-bottom-button:active { color: var(--text-on-accent); background: var(--interactive-accent); }
+.inkpad-bottom-menu { position: absolute; bottom: 46px; left: 0; display: grid; gap: 8px; min-width: 220px; padding: 10px; border: 1px solid var(--background-modifier-border); border-radius: 16px; color: var(--text-normal); background: var(--background-primary); box-shadow: 0 14px 35px rgba(0,0,0,.22); transform-origin: bottom left; animation: inkpad-menu-in 150ms cubic-bezier(.2,.8,.2,1); }
+.inkpad-rail-control { display: grid; width: 38px; height: 38px; box-sizing: border-box; place-items: center; border: 1px solid var(--background-modifier-border); border-radius: 12px; color: var(--text-muted); background: var(--background-primary); box-shadow: 0 6px 18px rgba(0,0,0,.12); cursor: pointer; touch-action: manipulation; }
+.inkpad-rail-control svg { display: block; width: 18px; height: 18px; pointer-events: none; }
+.inkpad-rail-control:active { color: var(--text-on-accent); background: var(--interactive-accent); }
+.inkpad-ink-trigger { z-index: 1; }
+.inkpad-ink-menu { right: auto; left: 0; bottom: calc(100% + 6px); box-sizing: border-box; width: 214px; min-width: 0; padding: 10px; border-radius: 12px; display: flex; flex-direction: column; align-items: stretch; gap: 9px; box-shadow: 0 6px 18px rgba(0,0,0,.12); transform-origin: bottom left; animation: inkpad-menu-up-in 150ms ease-out both; }
+.inkpad-swatch-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.inkpad-width-row { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
+.inkpad-width-row .inkpad-width { flex: 1; }
+.inkpad-bookmark-menu { min-width: 250px; }
+.inkpad-bookmark-add, .inkpad-bookmark-row button { display: flex; align-items: center; gap: 8px; min-height: 36px; border: 0; border-radius: 9px; color: var(--text-normal); background: transparent; text-align: left; touch-action: manipulation; }
+.inkpad-bookmark-add { padding: 7px 9px; }
+.inkpad-bookmark-add svg { width: 16px; height: 16px; }
+.inkpad-bookmark-row { display: flex; align-items: center; gap: 4px; }
+.inkpad-bookmark-row > :first-child { flex: 1; min-width: 0; padding: 7px 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inkpad-bookmark-row > :last-child { justify-content: center; width: 34px; padding: 0; color: var(--text-muted); }
+.inkpad-bookmark-delete { display: grid !important; place-items: center; flex: 0 0 34px; -webkit-appearance: none; appearance: none; }
+.inkpad-bookmark-delete svg { display: block !important; width: 18px !important; height: 18px !important; stroke: currentColor; fill: none; pointer-events: none; }
+.inkpad-bookmark-row .inkpad-bookmark-delete:active { color: var(--text-error); background: color-mix(in srgb, var(--text-error) 16%, transparent); }
+.inkpad-bookmark-add:active, .inkpad-bookmark-row button:active { color: var(--text-on-accent); background: var(--interactive-accent); }
+.inkpad-quick-menu { animation: inkpad-menu-in 150ms cubic-bezier(.2,.8,.2,1); transform-origin: top left; }
+.inkpad-quick-menu.is-closing, .inkpad-bottom-menu.is-closing { pointer-events: none; animation: inkpad-menu-out 150ms ease forwards; }
+@keyframes inkpad-menu-in { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes inkpad-menu-out { from { opacity: 1; } to { opacity: 0; transform: translateY(6px) scale(.97); } }
+@keyframes inkpad-menu-up-in { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes inkpad-menu-up-out { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(8px) scale(.97); } }
+.inkpad-ink-menu .inkpad-swatch-row { flex: 0 0 auto; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 8px; grid-column: auto; }
+.inkpad-ink-menu .inkpad-width-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) 28px; flex: 1 1 auto; width: 100%; align-items: center; justify-content: normal; grid-column: auto; }
+.inkpad-ink-menu .inkpad-width, .inkpad-ink-menu .inkpad-width-control { width: 100%; min-width: 0; }
+.inkpad-ink-menu.is-closing { animation: inkpad-menu-up-out 150ms ease-in both; }
+@supports (color: color-mix(in srgb, black, white)) { .inkpad-viewport-hud { border-color: color-mix(in srgb, var(--background-modifier-border) 72%, transparent); background: color-mix(in srgb, var(--background-primary) 72%, transparent); } }
+@supports (backdrop-filter: blur(1px)) { .inkpad-viewport-hud { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); } }
+.inkpad-save-state { padding: 0 5px; font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.inkpad-zoom-readout, .inkpad-hud-button { display: grid; min-width: 34px; height: 30px; place-items: center; padding: 0 7px; border: 0; border-radius: 8px; color: var(--text-muted); background: transparent; font-size: 11px; font-variant-numeric: tabular-nums; touch-action: manipulation; }
+.inkpad-hud-button { width: 30px; min-width: 30px; padding: 0; }
+.inkpad-hud-control { box-sizing: border-box; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.inkpad-hud-button svg { display: block; width: 16px; max-width: 16px; height: 16px; max-height: 16px; }
+.inkpad-zoom-readout:active, .inkpad-hud-button:active { color: var(--text-on-accent); background: var(--interactive-accent); }
+.inkpad-element { position: absolute; display: flex; flex-direction: column; overflow: hidden; contain: layout paint style; border: 0; border-radius: 12px; background: transparent; transform-origin: top left; pointer-events: none; }
+.inkpad-element-header { position: absolute; z-index: 4; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: flex-end; gap: 4px; height: 42px; padding: 4px 7px; color: var(--text-muted); background: transparent; border: 0; cursor: grab; pointer-events: auto; touch-action: none; }
+.inkpad-element-header:active { cursor: grabbing; }
+.inkpad-element-title { display: none; }
+.inkpad-element-action { display: grid; width: 30px; height: 30px; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); opacity: .72; touch-action: manipulation; transition: opacity 140ms ease, color 140ms ease, background 140ms ease; }
+.inkpad-element-action svg { width: 15px; height: 15px; }
+.inkpad-element:hover .inkpad-element-action, .inkpad-element:focus-within .inkpad-element-action { opacity: 1; }
+.inkpad-element-action:active, .inkpad-element-action.is-active { color: var(--text-on-accent); background: var(--interactive-accent); opacity: 1; }
+.inkpad-element-delete:active { color: var(--text-error); background: color-mix(in srgb, var(--text-error) 16%, transparent); }
+.inkpad-element-body { flex: 1; min-height: 0; overflow: hidden; padding: 10px; color: var(--text-normal); background: var(--background-primary); }
+.inkpad-element-body iframe { display: block; width: 100%; height: 100%; border: 0; background: white; }
+.inkpad-pdf-body { display: flex; flex-direction: column; padding: 0; }
+.inkpad-pdf-page { display: block; flex: 0 0 auto; width: 100% !important; height: auto !important; max-width: none; background: white; }
+.inkpad-pdf-loading { display: grid; place-items: center; min-height: 100%; color: var(--text-muted); }
+.inkpad-media-body { padding: 0; display: block; background: transparent; }
+.inkpad-media-body img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.inkpad-element-body audio { width: 100%; margin-top: 16px; }
+.inkpad-element-text { flex: 1; padding: 14px; overflow: hidden; font-size: 18px; line-height: 1.45; white-space: pre-wrap; color: var(--text-normal); }
+.inkpad-element-missing { padding: 12px; color: var(--text-error); }
+.inkpad-element-resize { position: absolute; z-index: 2; right: 5px; bottom: 5px; width: 20px; height: 20px; border-radius: 6px; background: linear-gradient(135deg, transparent 42%, var(--text-muted) 44%, var(--text-muted) 49%, transparent 51%, transparent 63%, var(--text-muted) 65%, var(--text-muted) 70%, transparent 72%); cursor: nwse-resize; pointer-events: auto; touch-action: none; }
+.inkpad-quick-menu { position: absolute; z-index: 10; display: grid; min-width: 210px; padding: 7px; gap: 3px; border: 1px solid var(--background-modifier-border); border-radius: 18px; background: var(--background-primary); box-shadow: 0 14px 35px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.12); }
+@supports (color: color-mix(in srgb, black, white)) { .inkpad-quick-menu { border-color: color-mix(in srgb, var(--background-modifier-border) 78%, transparent); background: color-mix(in srgb, var(--background-primary) 88%, transparent); } }
+@supports (backdrop-filter: blur(1px)) { .inkpad-quick-menu { background: color-mix(in srgb, var(--background-primary) 70%, transparent); backdrop-filter: saturate(160%) blur(20px); -webkit-backdrop-filter: saturate(160%) blur(20px); } }
+.inkpad-quick-menu button { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 8px 10px; border: 0; border-radius: 11px; color: var(--text-normal); background: transparent; text-align: left; touch-action: manipulation; }
+.inkpad-quick-menu button svg { width: 18px; height: 18px; color: var(--text-muted); }
+.inkpad-quick-menu button.is-active, .inkpad-quick-menu button:active { color: var(--text-on-accent); background: var(--interactive-accent); }
+.inkpad-quick-menu button.is-active svg, .inkpad-quick-menu button:active svg { color: inherit; }
+.inkpad-menu-divider { height: 1px; margin: 4px 6px; background: var(--background-modifier-border); }
+@media (max-width: 600px) { .inkpad-toolbar { gap: 6px; padding: 8px; } .inkpad-toolbar-group { gap: 2px; padding: 2px; } .inkpad-icon-button { width: 36px; height: 36px; } .inkpad-color-group { gap: 5px; } .inkpad-width { width: 68px; } .inkpad-swatch { width: 16px; min-height: 16px !important; height: 16px; } }

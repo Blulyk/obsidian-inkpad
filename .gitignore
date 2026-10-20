@@ -1,0 +1,6 @@
+node_modules/
+main.js
+pdf-renderer.js
+data.json
+.DS_Store
+*.log
