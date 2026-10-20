@@ -93,3 +93,5 @@ Inkpad makes no network requests and collects no telemetry. PDF parsing, drawing
 ## License
 
 [MIT](LICENSE)
+
+PDF rendering uses Mozilla PDF.js under Apache-2.0; see [third-party notices](THIRD_PARTY_NOTICES.md).
