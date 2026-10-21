@@ -1,5 +1,5 @@
-.inkpad-view { display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--background-primary); }
-.inkpad-toolbar { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; padding: max(10px, env(safe-area-inset-top)) 12px 10px; border-bottom: 1px solid var(--background-modifier-border); background: var(--background-secondary); }
+.inkpad-view { display: flex; flex: 1 1 0; flex-direction: column; align-self: stretch; min-height: 0; overflow: hidden; background: var(--background-primary); }
+.inkpad-toolbar { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; padding: 10px 12px; border-bottom: 1px solid var(--background-modifier-border); background: var(--background-secondary); }
 .inkpad-focus-mode .inkpad-toolbar { display: none; }
 @supports (color: color-mix(in srgb, black, white)) { .inkpad-toolbar { border-bottom-color: color-mix(in srgb, var(--background-modifier-border) 72%, transparent); background: color-mix(in srgb, var(--background-secondary) 84%, transparent); } }
 @supports (backdrop-filter: blur(1px)) { .inkpad-toolbar { background: color-mix(in srgb, var(--background-secondary) 72%, transparent); backdrop-filter: saturate(150%) blur(18px); -webkit-backdrop-filter: saturate(150%) blur(18px); } }
@@ -13,7 +13,7 @@
 .inkpad-destructive:active { color: var(--text-error); }
 .inkpad-color-group { gap: 7px; padding-inline: 7px; }
 .inkpad-color { flex: 0 0 auto; width: 30px; height: 30px; padding: 1px; border: 2px solid var(--background-modifier-border); border-radius: 50%; background: transparent; overflow: hidden; }
-.inkpad-color-picker { flex: 0 0 30px; width: 30px !important; min-width: 0 !important; max-width: 30px; height: 30px !important; min-height: 0 !important; max-height: 30px; padding: 0 !important; border: 3px solid var(--background-modifier-border); border-radius: 50%; appearance: none; -webkit-appearance: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,.28); touch-action: manipulation; }
+.inkpad-color-picker { flex: 0 0 30px; width: 30px; min-width: 0; max-width: 30px; height: 30px; min-height: 0; max-height: 30px; padding: 0; border: 3px solid var(--background-modifier-border); border-radius: 50%; appearance: none; -webkit-appearance: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,.28); touch-action: manipulation; }
 .inkpad-color-native { position: absolute; width: 1px; height: 1px; padding: 0; opacity: 0; pointer-events: none; }
 .inkpad-width { width: 84px; height: 6px; padding: 0; border: 0; border-radius: 999px; appearance: none; -webkit-appearance: none; background: var(--background-modifier-border); accent-color: var(--interactive-accent); }
 .inkpad-width::-webkit-slider-thumb { width: 18px; height: 18px; border: 2px solid var(--background-modifier-border); border-radius: 50%; appearance: none; -webkit-appearance: none; background: var(--background-primary); box-shadow: 0 1px 4px rgba(0,0,0,.24); }
@@ -21,7 +21,7 @@
 .inkpad-width-control::before { position: absolute; top: 12px; right: 0; left: 0; height: 6px; border-radius: 999px; background: var(--background-modifier-border); content: ""; }
 .inkpad-width-thumb { position: absolute; z-index: 1; top: 6px; width: 18px; height: 18px; border: 2px solid var(--background-modifier-border); border-radius: 50%; box-sizing: border-box; transform: translateX(-50%); background: var(--background-primary); box-shadow: 0 1px 4px rgba(0,0,0,.24); pointer-events: none; }
 .inkpad-width-label { min-width: 27px; color: var(--text-muted); font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }
-.inkpad-swatch { flex: 0 0 auto; width: 18px; min-height: 18px !important; height: 18px; padding: 0 !important; border: 2px solid var(--background-modifier-border); border-radius: 50% !important; box-shadow: inset 0 0 0 1px rgba(0,0,0,.28); touch-action: manipulation; }
+.inkpad-swatch { flex: 0 0 auto; width: 18px; min-height: 18px; height: 18px; padding: 0; border: 2px solid var(--background-modifier-border); border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.28); touch-action: manipulation; }
 .inkpad-swatch[aria-pressed="true"] { outline: 2px solid var(--interactive-accent); outline-offset: 2px; }
 .inkpad-viewport { position: relative; flex: 1; min-height: 0; overflow: hidden; background: var(--background-primary); }
 .inkpad-canvas { position: absolute; inset: 0; z-index: 2; display: block; width: 100%; height: 100%; contain: strict; touch-action: none; -webkit-user-select: none; user-select: none; cursor: crosshair; }
@@ -50,8 +50,8 @@
 .inkpad-bookmark-row { display: flex; align-items: center; gap: 4px; }
 .inkpad-bookmark-row > :first-child { flex: 1; min-width: 0; padding: 7px 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .inkpad-bookmark-row > :last-child { justify-content: center; width: 34px; padding: 0; color: var(--text-muted); }
-.inkpad-bookmark-delete { display: grid !important; place-items: center; flex: 0 0 34px; -webkit-appearance: none; appearance: none; }
-.inkpad-bookmark-delete svg { display: block !important; width: 18px !important; height: 18px !important; stroke: currentColor; fill: none; pointer-events: none; }
+.inkpad-bookmark-delete { display: grid; place-items: center; flex: 0 0 34px; -webkit-appearance: none; appearance: none; }
+.inkpad-bookmark-delete svg { display: block; width: 18px; height: 18px; stroke: currentColor; fill: none; pointer-events: none; }
 .inkpad-bookmark-row .inkpad-bookmark-delete:active { color: var(--text-error); background: color-mix(in srgb, var(--text-error) 16%, transparent); }
 .inkpad-bookmark-add:active, .inkpad-bookmark-row button:active { color: var(--text-on-accent); background: var(--interactive-accent); }
 .inkpad-quick-menu { animation: inkpad-menu-in 150ms cubic-bezier(.2,.8,.2,1); transform-origin: top left; }
@@ -84,7 +84,7 @@
 .inkpad-element-body { flex: 1; min-height: 0; overflow: hidden; padding: 10px; color: var(--text-normal); background: var(--background-primary); }
 .inkpad-element-body iframe { display: block; width: 100%; height: 100%; border: 0; background: white; }
 .inkpad-pdf-body { display: flex; flex-direction: column; padding: 0; }
-.inkpad-pdf-page { display: block; flex: 0 0 auto; width: 100% !important; height: auto !important; max-width: none; background: white; }
+.inkpad-pdf-page { display: block; flex: 0 0 auto; width: 100%; height: auto; max-width: none; background: white; }
 .inkpad-pdf-loading { display: grid; place-items: center; min-height: 100%; color: var(--text-muted); }
 .inkpad-media-body { padding: 0; display: block; background: transparent; }
 .inkpad-media-body img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -100,4 +100,4 @@
 .inkpad-quick-menu button.is-active, .inkpad-quick-menu button:active { color: var(--text-on-accent); background: var(--interactive-accent); }
 .inkpad-quick-menu button.is-active svg, .inkpad-quick-menu button:active svg { color: inherit; }
 .inkpad-menu-divider { height: 1px; margin: 4px 6px; background: var(--background-modifier-border); }
-@media (max-width: 600px) { .inkpad-toolbar { gap: 6px; padding: 8px; } .inkpad-toolbar-group { gap: 2px; padding: 2px; } .inkpad-icon-button { width: 36px; height: 36px; } .inkpad-color-group { gap: 5px; } .inkpad-width { width: 68px; } .inkpad-swatch { width: 16px; min-height: 16px !important; height: 16px; } }
+@media (max-width: 600px) { .inkpad-toolbar { gap: 6px; padding: 8px; } .inkpad-toolbar-group { gap: 2px; padding: 2px; } .inkpad-icon-button { width: 36px; height: 36px; } .inkpad-color-group { gap: 5px; } .inkpad-width { width: 68px; } .inkpad-swatch { width: 16px; min-height: 16px; height: 16px; } }
