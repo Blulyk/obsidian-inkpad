@@ -2,7 +2,7 @@
 
 Inkpad is a Pencil-first infinite drawing canvas for Obsidian. It stores each drawing as a portable `.ink` file in your vault, so your existing sync solution—including Remotely Save—remains in control.
 
-> **Status:** Inkpad 1.0.2 is the current public release. It is built for iPadOS with Apple Pencil and also supports Windows, macOS and Linux.
+> **Status:** Inkpad 1.0.3 is the current public release. It is built for iPadOS with Apple Pencil and also supports Windows, macOS and Linux.
 
 ## What it does
 

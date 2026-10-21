@@ -17,6 +17,10 @@ type InkRenderCache = { canvas: HTMLCanvasElement; width: number; height: number
 type PendingMouseInk = { stroke: InkStroke; first: InkPoint; points: InkPoint[] };
 const MAX_UNDO = 80;
 
+function lastItem<T>(items: readonly T[]): T | undefined {
+	return items.length === 0 ? undefined : items[items.length - 1];
+}
+
 export class InkpadView extends ItemView {
 	private file: TFile | null = null;
 	private document: InkDocument = { ...EMPTY_DOCUMENT, strokes: [], shapes: [], elements: [] };
@@ -456,7 +460,7 @@ export class InkpadView extends ItemView {
 			let first: InkPoint | null = null;
 			const added: InkPoint[] = [];
 			for (const sample of samples) {
-				const before = this.activeStroke.points.at(-1);
+				const before = lastItem(this.activeStroke.points);
 				const point = this.toPoint(sample);
 				if (this.appendPoint(this.activeStroke, point) && before) { first ??= before; added.push(point); }
 			}
@@ -496,7 +500,7 @@ export class InkpadView extends ItemView {
 			this.invalidateInkCache(); this.scheduleSave();
 		} else if (event.pointerId === this.activePointer && this.activeStroke) {
 			this.flushMouseInk();
-			const before = this.activeStroke.points.at(-1);
+			const before = lastItem(this.activeStroke.points);
 			const point = this.toPoint(event);
 			if (this.appendPoint(this.activeStroke, point) && before) this.drawSegment(this.activeStroke, before, point);
 			const completedStroke = this.activeStroke;
@@ -507,7 +511,7 @@ export class InkpadView extends ItemView {
 		}
 		if (this.pointers.size < 2) {
 			this.pinchStart = null;
-			const remaining = this.pointers.values().next().value as PointerEvent | undefined;
+			const remaining = this.pointers.values().next().value;
 			if (remaining?.pointerType === "touch") {
 				this.panPointer = remaining.pointerId;
 				this.panStart = { x: remaining.clientX, y: remaining.clientY, transform: { ...this.transform } };
@@ -519,7 +523,8 @@ export class InkpadView extends ItemView {
 	private beginPinch(): void {
 		const pair = [...this.pointers.values()].filter(pointer => pointer.pointerType === "touch").slice(0, 2);
 		if (pair.length !== 2) return;
-		const [first, second] = pair as [PointerEvent, PointerEvent];
+		const first = pair[0]; const second = pair[1];
+		if (!first || !second) return;
 		const distance = Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
 		if (!distance) return;
 		this.panStart = null;
@@ -531,7 +536,8 @@ export class InkpadView extends ItemView {
 		const start = this.pinchStart;
 		const pair = [...this.pointers.values()].filter(pointer => pointer.pointerType === "touch").slice(0, 2);
 		if (!start || pair.length !== 2) return;
-		const [first, second] = pair as [PointerEvent, PointerEvent];
+		const first = pair[0]; const second = pair[1];
+		if (!first || !second) return;
 		const distance = Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
 		const centerX = (first.clientX + second.clientX) / 2;
 		const centerY = (first.clientY + second.clientY) / 2;
@@ -589,7 +595,7 @@ export class InkpadView extends ItemView {
 	}
 
 	private appendPoint(stroke: InkStroke, point: InkPoint): boolean {
-		const previous = stroke.points.at(-1);
+		const previous = lastItem(stroke.points);
 		// Keep the Pencil's high-frequency samples: they are what lets the curve
 		// renderer remove angular corners without adding latency.  We only discard
 		// effectively identical coordinates, not visible movement.
@@ -1025,7 +1031,9 @@ export class InkpadView extends ItemView {
 			context.fillStyle = stroke.color;
 			context.beginPath(); context.arc(points[0]!.x, points[0]!.y, this.strokeWidth(stroke, points[0]!) / 2, 0, Math.PI * 2); context.fill(); context.restore(); return;
 		}
-		context.lineWidth = this.strokeWidth(stroke, points.at(-1)!);
+		const last = lastItem(points);
+		if (!last) { context.restore(); return; }
+		context.lineWidth = this.strokeWidth(stroke, last);
 		this.traceSmoothInkPath(context, points);
 		context.stroke();
 		context.restore();
@@ -1079,7 +1087,8 @@ export class InkpadView extends ItemView {
 			if (!bounds || bounds.right < lassoBounds.left || bounds.left > lassoBounds.right || bounds.bottom < lassoBounds.top || bounds.top > lassoBounds.bottom) return false;
 			const pointStride = Math.max(1, Math.floor(stroke.points.length / 600));
 			for (let index = 0; index < stroke.points.length; index += pointStride) if (intersectsLasso(stroke.points[index]!)) return true;
-			return intersectsLasso(stroke.points.at(-1)!);
+			const finalPoint = lastItem(stroke.points);
+			return finalPoint ? intersectsLasso(finalPoint) : false;
 		}).map(stroke => stroke.id));
 		this.selectedShapeIds = new Set(this.document.shapes.filter(shape => intersectsLasso(shape.start) || intersectsLasso(shape.end) || intersectsLasso({ x: (shape.start.x + shape.end.x) / 2, y: (shape.start.y + shape.end.y) / 2 })).map(shape => shape.id));
 	}
@@ -1115,13 +1124,15 @@ export class InkpadView extends ItemView {
 		const selected = this.document.strokes.filter(stroke => this.selectedStrokeIds.has(stroke.id));
 		if (!selected.length) { new Notice(t("selectStrokeToConvert")); return; }
 		this.snapshot();
-		const shapes = selected.map(stroke => {
+		const shapes: InkShape[] = [];
+		for (const stroke of selected) {
 			const points = stroke.points;
-			const bounds = this.boundsOf(points)!;
-			return type === "line"
-				? { id: crypto.randomUUID?.() ?? `${stroke.id}-line`, type, color: stroke.color, width: stroke.width, link: stroke.link, start: { x: points[0]!.x, y: points[0]!.y }, end: { x: points.at(-1)!.x, y: points.at(-1)!.y } }
-				: { id: crypto.randomUUID?.() ?? `${stroke.id}-${type}`, type, color: stroke.color, width: stroke.width, link: stroke.link, start: { x: bounds.left, y: bounds.top }, end: { x: bounds.right, y: bounds.bottom } };
-		});
+			const start = points[0]; const end = lastItem(points); const bounds = this.boundsOf(points);
+			if (!start || !end || !bounds) continue;
+			shapes.push(type === "line"
+				? { id: crypto.randomUUID?.() ?? `${stroke.id}-line`, type, color: stroke.color, width: stroke.width, link: stroke.link, start: { x: start.x, y: start.y }, end: { x: end.x, y: end.y } }
+				: { id: crypto.randomUUID?.() ?? `${stroke.id}-${type}`, type, color: stroke.color, width: stroke.width, link: stroke.link, start: { x: bounds.left, y: bounds.top }, end: { x: bounds.right, y: bounds.bottom } });
+		}
 		this.document.strokes = this.document.strokes.filter(stroke => !this.selectedStrokeIds.has(stroke.id));
 		this.document.shapes.push(...shapes);
 		this.selectedStrokeIds.clear(); this.selectedShapeIds = new Set([...this.selectedShapeIds, ...shapes.map(shape => shape.id)]);
@@ -1157,7 +1168,7 @@ export class InkpadView extends ItemView {
 
 	private async exportSvg(): Promise<void> {
 		if (!this.file) return;
-		const strokeMarkup = this.document.strokes.map(stroke => `<path d="${this.strokeSvgPath(stroke.points)}" fill="none" stroke="${stroke.color}" stroke-width="${this.strokeWidth(stroke, stroke.points.at(-1) ?? { x: 0, y: 0, p: .5, t: 0 })}" stroke-linecap="round" stroke-linejoin="round" opacity="${stroke.tool === "highlighter" ? "0.32" : "1"}"/>`).join("");
+		const strokeMarkup = this.document.strokes.map(stroke => `<path d="${this.strokeSvgPath(stroke.points)}" fill="none" stroke="${stroke.color}" stroke-width="${this.strokeWidth(stroke, lastItem(stroke.points) ?? { x: 0, y: 0, p: .5, t: 0 })}" stroke-linecap="round" stroke-linejoin="round" opacity="${stroke.tool === "highlighter" ? "0.32" : "1"}"/>`).join("");
 		const shapeMarkup = this.document.shapes.map(shape => {
 			if (shape.type === "rectangle") return `<rect x="${Math.min(shape.start.x, shape.end.x)}" y="${Math.min(shape.start.y, shape.end.y)}" width="${Math.abs(shape.end.x - shape.start.x)}" height="${Math.abs(shape.end.y - shape.start.y)}" fill="none" stroke="${shape.color}" stroke-width="${shape.width}"/>`;
 			if (shape.type === "ellipse") return `<ellipse cx="${(shape.start.x + shape.end.x) / 2}" cy="${(shape.start.y + shape.end.y) / 2}" rx="${Math.abs(shape.end.x - shape.start.x) / 2}" ry="${Math.abs(shape.end.y - shape.start.y) / 2}" fill="none" stroke="${shape.color}" stroke-width="${shape.width}"/>`;
@@ -1176,7 +1187,8 @@ export class InkpadView extends ItemView {
 			const control = points[index]!; const next = points[index + 1]!;
 			path += ` Q ${control.x} ${control.y} ${(control.x + next.x) / 2} ${(control.y + next.y) / 2}`;
 		}
-		if (points.length > 1) { const last = points.at(-1)!; path += ` L ${last.x} ${last.y}`; }
+		const last = lastItem(points);
+		if (points.length > 1 && last) path += ` L ${last.x} ${last.y}`;
 		return path;
 	}
 
@@ -1267,7 +1279,8 @@ export class InkpadView extends ItemView {
 	/** Draw a browser-coalesced Pencil packet in one Canvas stroke, not N strokes. */
 	private drawCoalescedSegment(stroke: InkStroke, first: InkPoint, points: InkPoint[]): void {
 		const context = this.context;
-		const last = points.at(-1)!;
+		const last = lastItem(points);
+		if (!last) return;
 		context.save();
 		context.translate(this.transform.x, this.transform.y);
 		context.scale(this.transform.zoom, this.transform.zoom);
@@ -1287,6 +1300,7 @@ export class InkpadView extends ItemView {
 	 * It is one Canvas path per browser packet, so it retains the fast input path.
 	 */
 	private traceSmoothInkPath(context: CanvasRenderingContext2D, points: InkPoint[]): void {
+		if (!points.length) return;
 		context.beginPath();
 		context.moveTo(points[0]!.x, points[0]!.y);
 		if (points.length === 2) {
@@ -1298,8 +1312,8 @@ export class InkpadView extends ItemView {
 			const next = points[index + 1]!;
 			context.quadraticCurveTo(control.x, control.y, (control.x + next.x) / 2, (control.y + next.y) / 2);
 		}
-		const last = points.at(-1)!;
-		context.lineTo(last.x, last.y);
+		const last = lastItem(points);
+		if (last) context.lineTo(last.x, last.y);
 	}
 
 	private strokeWidth(stroke: InkStroke, point: InkPoint): number {
